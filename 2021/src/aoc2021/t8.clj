@@ -13,14 +13,27 @@
         nums (map #(second (re-matches #".*\| (.*)" %)) raw)
         words (flatten (map #(clojure.string/split % #" ") nums))
         lens (map #(count %) words)
-        _ (println "result: "(count (filter unique-counts lens)))
-        ]))
+        result (count (filter unique-counts lens))
+        ]
+    (println "result: " result)
+    result))
+
+(defn p1-threaded
+  "Same as p1 but no intermediate stuff"
+  []
+  (->> (clojure.string/split-lines (slurp input))
+       (map #(second (re-matches #".*\| (.*)" %)))
+       (map #(clojure.string/split % #" "))
+       flatten
+       (map #(count %))
+       (filter #{2 3 4 7})
+       count))
 
 (defn solve [[ten four]]
   (let [tens (group-by count (map (fn [x] (set x)) (clojure.string/split ten #" ")))
         fours (map #(set %) (clojure.string/split four #" "))
         k1 (first (get tens 2))
-        k4  (first (get tens 4))
+        k4 (first (get tens 4))
         k7 (first (get tens 3))
         k8 (first (get tens 7))
         f2 (set/union k4 k7)

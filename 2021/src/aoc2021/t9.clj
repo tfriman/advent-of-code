@@ -34,8 +34,7 @@
         rows (count ins)
         intvals (mapv #(Character/getNumericValue %) (mapcat identity ins))
         low-indices (filter #(lowest? columns rows intvals %) (range 0 (* columns rows)))
-        result (apply + (map #(inc (nth intvals %)) low-indices))
-        ]
+        result (apply + (map #(inc (nth intvals %)) low-indices))]
     (println "result:" result)))
 
 (defn iter-neighbours-until-9
@@ -55,18 +54,11 @@
 
 (defn p2 []
   (let [ins (clojure.string/split-lines (slurp input))
-        _ (def ins (clojure.string/split-lines (slurp input)))
         columns (first (map count ins))
-        _ (def columns (first (map count ins)))
         rows (count ins)
-        _ (def         rows (count ins))
         intvals (mapv #(Character/getNumericValue %) (mapcat identity ins))
-        _ (def         intvals (mapv #(Character/getNumericValue %) (mapcat identity ins)))
         low-indices (filter #(lowest? columns rows intvals %) (range 0 (* columns rows)))
-        _ (def low-indices (filter #(lowest? columns rows intvals %) (range 0 (* columns rows))))
         basins (map #(iter-neighbours-until-9 columns rows intvals %) low-indices)
-        _ (def basins (map #(iter-neighbours-until-9 columns rows intvals %) low-indices))
         largest3 (take 3 (reverse (sort (map count basins))))
-        result (apply * largest3)
-        ]
+        result (apply * largest3)]
     (println "result:" result)))

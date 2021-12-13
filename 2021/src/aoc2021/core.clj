@@ -11,8 +11,9 @@
    [aoc2021.t8 :as t8]
    [aoc2021.t9 :as t9]
    [aoc2021.t10 :as t10]
+   [aoc2021.t11 :as t11]
    ))
 
 (defn -main []
-  (t10/p2)
+  (t11/p1)
   )
