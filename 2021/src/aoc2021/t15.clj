@@ -1,4 +1,5 @@
-(ns aoc2021.t15)
+(ns aoc2021.t15
+  (:require [clojure.data.priority-map :refer [priority-map]]))
 
 (def example "resources/t15-example.txt")
 (def examplep2 "resources/t15-p2-example.txt")
@@ -8,52 +9,66 @@
 (def input path)
 #_(def input examplep2)
 
-(comment
-  (def raw (clojure.string/split-lines (slurp input)))
-  (def rows (count raw))
-  (def columns (count (first raw)))
-  (def as-numbers (mapv #(Character/getNumericValue %) (apply concat raw)))
-  (def distances (merge  {0 0} (zipmap (range 1 (* columns rows)) (repeat Integer/MAX_VALUE))))
-  (def inputs (range 0 (* columns rows)))
-  )
-
 (defn neighbours [idx cols rows]
+  #_(println "idx:" idx " cols " cols " rows " rows)
   (let [up (when (>= idx cols) (- idx cols))
         down (when (> (* cols rows) (+ idx cols) ) (+ idx cols))
         left (when (not= 0 (mod idx cols)) (dec idx))
         right (when (not= (dec cols) (mod idx cols)) (inc idx))]
-    (filter some? [up down left right])))
+    (filterv some? [up down left right])))
 
 (defn ->priority-queue
   "s elems are indices. distmap contains weights"
   [s distmap]
-  (sort-by #(distmap %) s))
+  (sort-by #(distmap % Integer/MAX_VALUE) (take 6000 s)))
 
-(comment
-  (->priority-queue [1 2 3] {1 11 2 2 3 33})
-  )
-
-
-(defn update-distances [idx neighbouridxs distmap weighs]
+(defn update-distances [idx neighbouridxs distmap priomap weighs]
+  #_(println "update-distances:" idx neighbouridxs)
   (loop [n (first neighbouridxs)
          r (rest neighbouridxs)
-         dm distmap]
+         dm distmap
+         pm priomap]
     (if (nil? n)
-      dm
-      (let [oldd (dm n)
-            prospectd (+ (dm idx) (nth weighs n))
-            ;;newd (min oldd prospectd)
+      {:dist dm
+       :prio pm}
+      (let [oldd (dm n Integer/MAX_VALUE)
+            prospectd (+ (dm idx Integer/MAX_VALUE) (nth weighs n))
             update? (> oldd prospectd)
             newdm (if update?
                     (assoc dm n prospectd)
-                    dm)]
-        (recur (first r) (rest r) newdm)))))
+                    dm)
+            newpm (if update?
+                    (assoc pm n prospectd)
+                    pm)]
+        (recur (first r) (rest r) newdm newpm)))))
 
 (defn djikstra [rows cols inputseq distancemap weighs target]
-  (println "djikstra searching for " target)
+  (println "Djikstra searching for " target)
+  (let [inputdistmap (->
+                       (into (priority-map) (map (fn [x] [x Integer/MAX_VALUE]) inputseq))
+                       (assoc 0 0))]
+    (println "input 5 first " (take 5 inputdistmap))
+    (loop [nodeidx (ffirst inputdistmap)
+           inputs (pop inputdistmap)
+           distmap distancemap]
+      #_(println "nodeidx" nodeidx)
+      (if (nil? nodeidx)
+        (distmap target)
+        (let [neighs (neighbours nodeidx rows cols)
+              #_ (println "neighs" neighs)
+              ud (update-distances nodeidx neighs distmap inputs weighs)
+              prio (dissoc (:prio ud) nodeidx)
+              #_ (println "first prio" (first prio))
+              #_ (println "first prio rest" (first (pop  prio)))
+              dist (:dist ud)]
+          (recur (ffirst prio) (if (empty? prio) {} (pop prio)) dist))))))
+
+(defn djikstra-old [rows cols inputseq distancemap weighs target]
+  (println "Djikstra searching for " target)
   (loop [nodeidx (first (->priority-queue inputseq distancemap))
          inputs (rest (->priority-queue inputseq distancemap))
          distmap distancemap]
+    (println "inputs:" (take 3 inputs))
     (if (nil? nodeidx)
       (distmap target)
       (let [neighs (neighbours nodeidx rows cols)
@@ -106,34 +121,36 @@
              (conj res (generate-map-row s collen) )))))
 
 (defn ->distances [columns rows]
-  (merge  {0 0} (zipmap (range 1 (* columns rows)) (repeat Integer/MAX_VALUE))))
+
+  #_(merge  {0 0} (zipmap (range 1 (* columns rows)) (repeat Integer/MAX_VALUE)))
+  {0 0}
+  )
 
 (defn ->inputs [columns rows]
   (range 0 (* columns rows)))
 
 (defn p1 []
   (let [raw (clojure.string/split-lines (slurp input))
-        weights (mapv #(Character/getNumericValue %) (apply concat raw))
+        weights ^ints (mapv #(Character/getNumericValue ^char %) (apply concat raw))
         rows (count raw)
         columns (count (first raw))
-        inputs (->inputs columns rows)
-        distances (->distances columns rows)
-        result (djikstra rows columns inputs distances weights (dec (* columns rows)))]
+        inputs ^ints (->inputs columns rows)
+        ;;     distances (->distances columns rows)
+        ;;           result (djikstra rows columns inputs distances weights ^int (dec (* columns rows)))
+        result (djikstra rows columns inputs {0 0} weights ^int (dec (* columns rows)))
+        ]
     (println "result:" result)
-    #_(println "djik: "(djikstra rows columns inputs distances weighs (dec (* columns rows))))
-    result
-    )
-  )
+    result))
 
 (defn p2 []
   (let [raw (clojure.string/split-lines (slurp input))
-        nums (mapv #(Character/getNumericValue %) (apply concat raw))
+        nums (mapv #(Character/getNumericValue ^char %) (apply concat raw))
         rows5 (* 5 (count raw))
         columns5 (* 5 (count (first raw)))
         inputs (->inputs columns5 rows5)
-        weights (gen-inc-maps nums (count (first raw)))
+        weights ^ints (gen-inc-maps nums (count (first raw)))
         distances (->distances columns5 rows5)
-        result (djikstra rows5 columns5 inputs distances weights (dec (* columns5 rows5)))
+        result (djikstra rows5 columns5 inputs {0 0} weights (dec (* columns5 rows5)))
         ]
     (println "rows5" rows5)
     (println "cols5" columns5)
