@@ -13,8 +13,10 @@
    [aoc2021.t10 :as t10]
    [aoc2021.t11 :as t11]
    [aoc2021.t12 :as t12]
+   [aoc2021.t15 :as t15]
+
    ))
 
 (defn -main []
-  (t12/p2)
+  (time (t15/p1))
   )
