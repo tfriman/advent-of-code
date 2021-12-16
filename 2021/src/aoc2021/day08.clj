@@ -1,8 +1,8 @@
-(ns aoc2021.t8
+(ns aoc2021.day08
   (:require [clojure.set :as set]))
 
-(def example "resources/t8-example.txt")
-(def path "resources/t8.txt")
+(def example "resources/day08-example.txt")
+(def path "resources/day08.txt")
 (def input example)
 (def input path)
 

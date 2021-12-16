@@ -1,8 +1,8 @@
-(ns aoc2021.t4
+(ns aoc2021.day04
   (:require [clojure.set :refer [superset?]]))
 
-(def example "resources/t4-example.txt")
-(def path "resources/t4.txt")
+(def example "resources/day04-example.txt")
+(def path "resources/day04.txt")
 (def input example)
 #_(def input path)
 

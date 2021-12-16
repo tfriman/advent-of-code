@@ -1,7 +1,7 @@
-(ns aoc2021.t9)
+(ns aoc2021.day09)
 
-(def example "resources/t9-example.txt")
-(def path "resources/t9.txt")
+(def example "resources/day09-example.txt")
+(def path "resources/day09.txt")
 (def input example)
 #_(def input path)
 

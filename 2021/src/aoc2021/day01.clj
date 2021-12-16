@@ -1,7 +1,7 @@
-(ns aoc2021.t1)
+(ns aoc2021.day01)
 
-(def example "resources/t1-example.txt")
-(def path "resources/t1.txt")
+(def example "resources/day01-example.txt")
+(def path "resources/day01.txt")
 (def input path)
 
 (defn diffs [in]

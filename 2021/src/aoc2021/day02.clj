@@ -1,7 +1,7 @@
-(ns aoc2021.t2)
+(ns aoc2021.day02)
 
-(def example "resources/t2-example.txt")
-(def path "resources/t2.txt")
+(def example "resources/day02-example.txt")
+(def path "resources/day02.txt")
 (def input path)
 
 (defn get-by [in reg]

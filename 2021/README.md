@@ -6,12 +6,12 @@ Disclaimer: I'm not a Clojure pro.
 
 ## Naming conventions
 
-src/aoc2021/tN.clj -> t is for task, N for the day.
+src/aoc2021/dayN.clj -> N for the day.
 
-Each tN.clj has p1 and p2 functions for part1 and part2.
+Each dayN.clj has p1 and p2 functions for part1 and part2.
 
 ## Usage
 
-Edit src/aoc2021/core.clj to the wanted task and part.
+Edit src/aoc2021/aoccore.clj to the wanted task and part and then run:
 
 ```lein run```

@@ -1,16 +1,15 @@
-(ns aoc2021.t15
+(ns aoc2021.day15
   (:require [clojure.data.priority-map :refer [priority-map]]))
 
-(def example "resources/t15-example.txt")
-(def examplep2 "resources/t15-p2-example.txt")
+(def example "resources/day15-example.txt")
+(def examplep2 "resources/day15-p2-example.txt")
 
-(def path "resources/t15.txt")
+(def path "resources/day15.txt")
 (def input example)
 (def input path)
 #_(def input examplep2)
 
 (defn neighbours [idx cols rows]
-  #_(println "idx:" idx " cols " cols " rows " rows)
   (let [up (when (>= idx cols) (- idx cols))
         down (when (> (* cols rows) (+ idx cols) ) (+ idx cols))
         left (when (not= 0 (mod idx cols)) (dec idx))
@@ -18,7 +17,6 @@
     (filterv some? [up down left right])))
 
 (defn update-distances [idx neighbouridxs distmap priomap weighs]
-  #_(println "update-distances:" idx neighbouridxs)
   (loop [n (first neighbouridxs)
          r (rest neighbouridxs)
          dm distmap
@@ -40,14 +38,13 @@
 (defn djikstra [rows cols inputseq distancemap weighs target]
   (println "Djikstra searching for " target)
   (let [inputdistmap-remove (->
-                       (into (priority-map) (map (fn [x] [x Integer/MAX_VALUE]) inputseq))
-                       (assoc 0 0))
+                             (into (priority-map) (map (fn [x] [x Integer/MAX_VALUE]) inputseq))
+                             (assoc 0 0))
         inputdistmap (priority-map 0 0 1 Integer/MAX_VALUE)]
     (loop [nodeidx (ffirst inputdistmap)
            inputs (pop inputdistmap)
            distmap distancemap
            idx 0]
-      #_(println "nodeidx" nodeidx)
       (when (= 0 (mod idx 1000))
         (println "round" idx))
       (if (nil? nodeidx)
@@ -102,12 +99,6 @@
                                  ne))) s)
              (conj res (generate-map-row s collen) )))))
 
-(defn ->distances [columns rows]
-
-  #_(merge  {0 0} (zipmap (range 1 (* columns rows)) (repeat Integer/MAX_VALUE)))
-  {0 0}
-  )
-
 (defn ->inputs [columns rows]
   (range 0 (* columns rows)))
 
@@ -117,25 +108,23 @@
         rows (count raw)
         columns (count (first raw))
         inputs ^ints (->inputs columns rows)
-        ;;     distances (->distances columns rows)
-        ;;           result (djikstra rows columns inputs distances weights ^int (dec (* columns rows)))
         result (djikstra rows columns inputs {0 0} weights ^int (dec (* columns rows)))
         ]
     (println "result:" result)
     result))
 
-(defn p2 []
+(defn p2
+  "Performance is horrible, took 41 mins on my Intel MacBook Pro :("
+  []
   (let [raw (clojure.string/split-lines (slurp input))
         nums (mapv #(Character/getNumericValue ^char %) (apply concat raw))
         rows5 (* 5 (count raw))
         columns5 (* 5 (count (first raw)))
         inputs (->inputs columns5 rows5)
         weights ^ints (gen-inc-maps nums (count (first raw)))
-        distances (->distances columns5 rows5)
         result (djikstra rows5 columns5 inputs {0 0} weights (dec (* columns5 rows5)))
         ]
     (println "rows5" rows5)
     (println "cols5" columns5)
     (println "result p2:" result)
-    result
-    ))
+    result))
