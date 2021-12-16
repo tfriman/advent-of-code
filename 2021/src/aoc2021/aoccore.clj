@@ -1,4 +1,4 @@
-(ns aoc2021.core
+(ns aoc2021.aoccore
   (:gen-class)
   (:require
    [aoc2021.t1 :as t1]
@@ -14,9 +14,9 @@
    [aoc2021.t11 :as t11]
    [aoc2021.t12 :as t12]
    [aoc2021.t15 :as t15]
-
    ))
 
-(defn -main []
-  (time (t15/p1))
+(defn -main [& args]
+  (println "aoccore")
+  (time (t15/p2))
   )

@@ -17,11 +17,6 @@
         right (when (not= (dec cols) (mod idx cols)) (inc idx))]
     (filterv some? [up down left right])))
 
-(defn ->priority-queue
-  "s elems are indices. distmap contains weights"
-  [s distmap]
-  (sort-by #(distmap % Integer/MAX_VALUE) (take 6000 s)))
-
 (defn update-distances [idx neighbouridxs distmap priomap weighs]
   #_(println "update-distances:" idx neighbouridxs)
   (loop [n (first neighbouridxs)
@@ -44,37 +39,24 @@
 
 (defn djikstra [rows cols inputseq distancemap weighs target]
   (println "Djikstra searching for " target)
-  (let [inputdistmap (->
+  (let [inputdistmap-remove (->
                        (into (priority-map) (map (fn [x] [x Integer/MAX_VALUE]) inputseq))
-                       (assoc 0 0))]
-    (println "input 5 first " (take 5 inputdistmap))
+                       (assoc 0 0))
+        inputdistmap (priority-map 0 0 1 Integer/MAX_VALUE)]
     (loop [nodeidx (ffirst inputdistmap)
            inputs (pop inputdistmap)
-           distmap distancemap]
+           distmap distancemap
+           idx 0]
       #_(println "nodeidx" nodeidx)
+      (when (= 0 (mod idx 1000))
+        (println "round" idx))
       (if (nil? nodeidx)
         (distmap target)
         (let [neighs (neighbours nodeidx rows cols)
-              #_ (println "neighs" neighs)
               ud (update-distances nodeidx neighs distmap inputs weighs)
               prio (dissoc (:prio ud) nodeidx)
-              #_ (println "first prio" (first prio))
-              #_ (println "first prio rest" (first (pop  prio)))
               dist (:dist ud)]
-          (recur (ffirst prio) (if (empty? prio) {} (pop prio)) dist))))))
-
-(defn djikstra-old [rows cols inputseq distancemap weighs target]
-  (println "Djikstra searching for " target)
-  (loop [nodeidx (first (->priority-queue inputseq distancemap))
-         inputs (rest (->priority-queue inputseq distancemap))
-         distmap distancemap]
-    (println "inputs:" (take 3 inputs))
-    (if (nil? nodeidx)
-      (distmap target)
-      (let [neighs (neighbours nodeidx rows cols)
-            newdmap (update-distances nodeidx neighs distmap weighs)
-            s (->priority-queue inputs newdmap)]
-        (recur (first s) (rest s) newdmap)))))
+          (recur (ffirst prio) (if (empty? prio) {} (pop prio)) dist (inc idx)))))))
 
 (defn gen-row [s]
   (loop [y (range 0 5)
