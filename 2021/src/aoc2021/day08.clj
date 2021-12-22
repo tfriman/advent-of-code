@@ -21,11 +21,12 @@
 (defn p1-threaded
   "Same as p1 but no intermediate stuff"
   []
-  (->> (clojure.string/split-lines (slurp input))
+  (->> (slurp input)
+       clojure.string/split-lines
        (map #(second (re-matches #".*\| (.*)" %)))
        (map #(clojure.string/split % #" "))
        flatten
-       (map #(count %))
+       (map count)
        (filter #{2 3 4 7})
        count))
 
