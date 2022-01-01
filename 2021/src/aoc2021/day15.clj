@@ -10,27 +10,27 @@
 #_(def input examplep2)
 
 (defn neighbours [idx cols rows]
-  (let [up (when (>= idx cols) (- idx cols))
-        down (when (> (* cols rows) (+ idx cols) ) (+ idx cols))
-        left (when (not= 0 (mod idx cols)) (dec idx))
+  (let [up    (when (>= idx cols) (- idx cols))
+        down  (when (> (* cols rows) (+ idx cols) ) (+ idx cols))
+        left  (when (not= 0 (mod idx cols)) (dec idx))
         right (when (not= (dec cols) (mod idx cols)) (inc idx))]
     (filterv some? [up down left right])))
 
 (defn update-distances [idx neighbouridxs distmap priomap weighs]
-  (loop [n (first neighbouridxs)
-         r (rest neighbouridxs)
+  (loop [n  (first neighbouridxs)
+         r  (rest neighbouridxs)
          dm distmap
          pm priomap]
     (if (nil? n)
       {:dist dm
        :prio pm}
-      (let [oldd (dm n Integer/MAX_VALUE)
-            prospectd (+ (dm idx Integer/MAX_VALUE) (nth weighs n))
-            update? (> oldd prospectd)
-            newdm (if update?
+      (let [oldd      (dm n Integer/MAX_VALUE)
+            prospectd (+ (dm idx Integer/MAX_VALUE) (aget weighs n))
+            update?   (> oldd prospectd)
+            newdm     (if update?
                     (assoc dm n prospectd)
                     dm)
-            newpm (if update?
+            newpm     (if update?
                     (assoc pm n prospectd)
                     pm)]
         (recur (first r) (rest r) newdm newpm)))))
@@ -40,19 +40,19 @@
   (let [inputdistmap-remove (->
                              (into (priority-map) (map (fn [x] [x Integer/MAX_VALUE]) inputseq))
                              (assoc 0 0))
-        inputdistmap (priority-map 0 0 1 Integer/MAX_VALUE)]
+        inputdistmap        (priority-map 0 0 1 Integer/MAX_VALUE)]
     (loop [nodeidx (ffirst inputdistmap)
-           inputs (pop inputdistmap)
+           inputs  (pop inputdistmap)
            distmap distancemap
-           idx 0]
+           idx     0]
       (when (= 0 (mod idx 1000))
         (println "round" idx))
       (if (nil? nodeidx)
         (distmap target)
         (let [neighs (neighbours nodeidx rows cols)
-              ud (update-distances nodeidx neighs distmap inputs weighs)
-              prio (dissoc (:prio ud) nodeidx)
-              dist (:dist ud)]
+              ud     (update-distances nodeidx neighs distmap inputs weighs)
+              prio   (dissoc (:prio ud) nodeidx)
+              dist   (:dist ud)]
           (recur (ffirst prio) (if (empty? prio) {} (pop prio)) dist (inc idx)))))))
 
 (defn gen-row [s]
@@ -104,7 +104,7 @@
 
 (defn p1 []
   (let [raw (clojure.string/split-lines (slurp input))
-        weights ^ints (mapv #(Character/getNumericValue ^char %) (apply concat raw))
+        weights (mapv #(Character/getNumericValue ^char %) (apply concat raw))
         rows (count raw)
         columns (count (first raw))
         inputs ^ints (->inputs columns rows)
@@ -121,7 +121,7 @@
         rows5 (* 5 (count raw))
         columns5 (* 5 (count (first raw)))
         inputs (->inputs columns5 rows5)
-        weights ^ints (gen-inc-maps nums (count (first raw)))
+        weights (int-array (gen-inc-maps nums (count (first raw))))
         result (djikstra rows5 columns5 inputs {0 0} weights (dec (* columns5 rows5)))
         ]
     (println "rows5" rows5)
