@@ -2,5 +2,6 @@
   :main aoc2021.aoccore
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/data.priority-map "1.1.0"]
-                 [org.clojure/data.int-map "1.0.0"]]
+                 [org.clojure/data.int-map "1.0.0"]
+                 [criterium "0.4.6"]]
   :repl-options {:init-ns aoc2021.aoccore})
