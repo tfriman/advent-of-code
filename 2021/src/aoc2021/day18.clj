@@ -1,6 +1,5 @@
 (ns aoc2021.day18
-  (:require [clojure.zip :as z]
-            [clojure.data :as data]))
+  (:require [clojure.zip :as z]))
 
 (def example "resources/day18-example.txt")
 (def example-pt2 "resources/day18-example-pt2.txt")
@@ -41,8 +40,7 @@
                  (-> (first (drop-while #(z/branch? %) (iterate z/prev loc)))
                      (z/edit (fn xleft [x & args] (+ x lleft)))
                      find-5th-level-loc
-                     (z/replace 0)
-                     )
+                     (z/replace 0))
                  (z/replace loc 0))
         result (if-let [right (find-up res z/right)]
                  (let [noderight (first (drop-while #(z/branch? %) (lazy-cat [right] (iterate z/next right))))
@@ -70,22 +68,31 @@
 
 (defn split
   "Gets loc pointing to a reg number needing to be split. Returns root loc.
-  To split a regular number, replace it with a pair; the left element of the pair should be the regular number divided by two and rounded down, while the right element of the pair should be the regular number divided by two and rounded up. For example, 10 becomes [5,5], 11 becomes [5,6], 12 becomes [6,6], and so on."
+   To split a regular number, replace it with a pair; the left element of the
+   pair should be the regular number divided by two and rounded down, while
+   the right element of the pair should be the regular number divided by two
+   and rounded up.
+   For example, 10 becomes [5,5], 11 becomes [5,6], 12 becomes [6,6], and so on."
   [loc]
   (let [v (z/node loc)]
     (z/root (z/replace loc [(int (Math/floor (/ v 2))) (int (Math/ceil (/ v 2)))]))))
 
 (defn- add
+  "Adds two vectors"
   [left right]
   (-> (z/vector-zip [])
       (z/append-child left)
       (z/append-child right)
       z/root))
 
-(defn notpure? [loc]
+(defn notpure?
+  "Checks if loc !branch or branch without seq children."
+  [loc]
   (or (not (z/branch? loc)) (some sequential? (z/children loc))))
 
-(defn magnitude [loc]
+(defn magnitude
+  "pt2 calculation"
+  [loc]
   (loop [loc (z/vector-zip loc)]
     (def ll loc)
     (if (not (z/branch? loc))
@@ -126,9 +133,9 @@
     (if (empty? r)
       res
       (let [newres (reduce (fn redufn [acc x]
-                             (let [xx (magnitude (process-pair f x))
-                                   yy (magnitude (process-pair x f))
-                                   m (max acc xx yy)]
+                             (let [fx (magnitude (process-pair f x))
+                                   xf (magnitude (process-pair x f))
+                                   m (max acc fx xf)]
                                m)) res r)]
         (recur (first r) (rest r) newres)))))
 
