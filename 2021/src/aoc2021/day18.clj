@@ -31,7 +31,7 @@
 
 (defn- explode
   "Left side added to first regular number in left if any. Same for right. Always ends up with [x 0] or [0 x] pair
-  Returns node."
+  Returns root node."
   [loc]
   (let [node   (z/node loc)
         lleft  (first node)
