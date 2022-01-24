@@ -1,77 +1,26 @@
 (ns aoc2021.day18
   (:require [clojure.zip :as z]
-            [clojure.zip :as zip]))
+            [clojure.data :as data]))
 
 (def example "resources/day18-example.txt")
+(def example-pt2 "resources/day18-example-pt2.txt")
+
 (def simple-example "resources/day18-example-simple.txt")
 (def path "resources/day18.txt")
 (def input simple-example)
-#_(def input example)
-#_(def input path)
-
-(comment
-  (defn update-all [z f]
-    (loop [z z]
-      (if (z/end? z)
-        (z/root z)
-        (recur (z/next (fn [loc] (if (z/branch? loc) loc (zip/edit loc f))))))))
-
-  (defn zip-walk [f z]
-    (if (zip/end? z)
-      (zip/root z)
-      (recur f (zip/next (f z)))))
-
-  (zip-walk
-   (fn [loc]
-     (if (zip/branch? loc)
-       loc
-       (zip/edit loc * 2)))
-   (zip/vector-zip [1 2 [3 4]]))
-
-  (def zp (z/zipper (fn [x] (:up (meta x))) seq (fn [_ c] c) (with-meta [[1 2 3] [2 2 2]] {:up true})))
-  (z/edit (z/next (z/next zp)) (fn [[a b c]] [a b (dec c)]))
-
-  (-> (z/vector-zip [[1 1 0]])
-      (z/append-child [2 2 0])
-      (z/root)
-      #_(z/next)
-      #_(z/edit (fn [x] [(first x) (second x) (inc (last x))]))
-      ))
-
-;; explode examples
-(def ex1 [[[[[9,8],1],2],3],4])
-(def ex1-result [[[[0,9],2],3],4])
-(def ex2 [7,[6,[5,[4,[3,2]]]]])
-(def ex2-result [7,[6,[5,[7,0]]]])
-(def ex3 [[6,[5,[4,[3,2]]]],1])
-(def ex3-result [[6,[5,[7,0]]],3])
-(def nex1 [[1,9],[8,5]])
-
-(def nz1 (z/vector-zip nex1))
-(def z1 (z/vector-zip ex1))
-(def z2 (z/vector-zip ex2))
-(def z3 (z/vector-zip ex3))
+(def input example)
+(def input example-pt2)
+(def input path)
 
 (defn- find-5th-level-loc
   "Finds 5th level loc or nil"
   [z]
-  (loop [z z
-         bc 0]
-    (if (or (z/end? z) (= 5 bc))
+  (loop [z z]
+    (if (or (z/end? z) (= 5 (-> z z/path count)))
       (if (z/end? z) nil (z/up z))
-      (recur (z/next z) (if (z/branch? z) (inc bc) bc)))))
+      (recur (z/next z) ))))
 
-(def l1 (find-5th-level-loc z1))
-(def l2 (find-5th-level-loc z2))
-(def l3 (find-5th-level-loc z3))
-
-(comment
-  (def l1-left (z/left l1))
-  (def l1-right (z/right l1))
-  (z/root (z/replace l1 [6 6]))
-  (z/right (z/up (z/up (z/up (z/next l3))))))
-
-(defn find-up
+(defn- find-up
   "Goes up until root or left/right found or root meaning nil"
   [loc matchfn]
   (loop [loc loc]
@@ -81,21 +30,109 @@
         (matchfn loc)
         (recur (z/up loc))))))
 
-;; z/remove found node, then it moves up.
-;; talleta z/left ja z/right ensin.
+(defn- explode
+  "Left side added to first regular number in left if any. Same for right. Always ends up with [x 0] or [0 x] pair
+  Returns node."
+  [loc]
+  (let [node   (z/node loc)
+        lleft  (first node)
+        lright (second node)
+        res    (if-let [left (find-up loc z/left)] ;; todo can this be removed?
+                 (-> (first (drop-while #(z/branch? %) (iterate z/prev loc)))
+                     (z/edit (fn xleft [x & args] (+ x lleft)))
+                     find-5th-level-loc
+                     (z/replace 0)
+                     )
+                 (z/replace loc 0))
+        result (if-let [right (find-up res z/right)]
+                 (let [noderight (first (drop-while #(z/branch? %) (lazy-cat [right] (iterate z/next right))))
+                       resu      (z/edit noderight (fn nobranchx [x & args] (+ x lright)))]
+                   resu)
+                 res)]
+    (z/root result)))
 
+(defn- needs-split?
+  "loc needs split?"
+  [loc]
+  (if (z/branch? loc)
+    nil
+    (> (z/node loc) 9)))
 
-;; hackish way to find the levels... trusts internals of zip location. not recommended. 5 means too much!
-#_(map (fn [[a b]] (count (:pnodes b)))
-                      (take-while #(not= :end (second %)) (iterate z/next z3)))
+(defn- find-split-loc
+  "Returns loc where there is a pair to split or nil if none found"
+  [loc]
+  (loop [loc loc]
+    (if (z/end? loc)
+      nil
+      (if (needs-split? loc)
+        loc
+        (recur (z/next loc))))))
 
+(defn split
+  "Gets loc pointing to a reg number needing to be split. Returns root loc.
+  To split a regular number, replace it with a pair; the left element of the pair should be the regular number divided by two and rounded down, while the right element of the pair should be the regular number divided by two and rounded up. For example, 10 becomes [5,5], 11 becomes [5,6], 12 becomes [6,6], and so on."
+  [loc]
+  (let [v (z/node loc)]
+    (z/root (z/replace loc [(int (Math/floor (/ v 2))) (int (Math/ceil (/ v 2)))]))))
 
+(defn- add
+  [left right]
+  (-> (z/vector-zip [])
+      (z/append-child left)
+      (z/append-child right)
+      z/root))
 
-;; explode: four deep, left is added to first regular number on right if any
-;; and left to first regular number on left if any. result is always x,0 or 0,x pair.
-;; so one pair is exploded.
+(defn notpure? [loc]
+  (or (not (z/branch? loc)) (some sequential? (z/children loc))))
 
-(defn p1 []
-  (let [in (clojure.string/split-lines (slurp input))]
-    in
-    ))
+(defn magnitude [loc]
+  (loop [loc (z/vector-zip loc)]
+    (def ll loc)
+    (if (not (z/branch? loc))
+      (z/node loc)
+      (let [purenode (first (drop-while notpure? (lazy-seq [loc] (iterate z/next loc))))
+            [l r] (z/node purenode)
+            resu (z/replace purenode (+ (* 3 l) (* 2 r)))]
+        (recur (z/vector-zip (z/root resu)))))))
+
+(defn process-loc
+  "Does explode / split until no changes needed. Takes vec in."
+  [loc]
+  (loop [loc (z/vector-zip loc)]
+    (let [nxt (if-let [fifth (find-5th-level-loc loc)]
+                (explode fifth)
+                (if-let [splitloc (find-split-loc loc)]
+                  (split splitloc)
+                  nil))]
+      (if (nil? nxt)
+        (z/root loc)
+        (recur (z/vector-zip nxt))))))
+
+(defn- process-pair [a b] (process-loc (add a b)))
+
+(defn do-it [inp]
+  (let [ins (map read-string (clojure.string/split-lines (slurp inp)))
+        result (reduce process-pair ins)]
+    (doto result (#(println "result" %)))))
+
+(defn p1 [] (println "p1" (magnitude (do-it input))))
+
+(defn- find-max-mag
+  "Loop each pair and find the max"
+  [s]
+  (loop [f (first s)
+         r (rest s)
+         res 0]
+    (if (empty? r)
+      res
+      (let [newres (reduce (fn redufn [acc x]
+                             (let [xx (magnitude (process-pair f x))
+                                   yy (magnitude (process-pair x f))
+                                   m (max acc xx yy)]
+                               m)) res r)]
+        (recur (first r) (rest r) newres)))))
+
+(defn p2 []
+  (let [ins (map read-string (clojure.string/split-lines (slurp input)))
+        maxmag (find-max-mag ins)]
+    (doto maxmag (#(println "p2:" %)))))
