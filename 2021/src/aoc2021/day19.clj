@@ -14,12 +14,6 @@
   (letfn [ (dir [a b] (if (= 0 (+ a b)) -1 1))]
     [(dir a1 b1) (dir a2 b2) (dir a3 b3)]))
 
-(defn- sum-vec [[a1 a2 a3] [b1 b2 b3]]
-  [(+ a1 b1) (+ a2 b2) (+ a3 b3)])
-
-(defn- subs-vec [[a1 a2 a3] [b1 b2 b3]]
-  [(- a1 b1) (- a2 b2) (- a3 b3)])
-
 (defn permutations [colls]
   (if (= 1 (count colls))
     (list colls)
@@ -92,7 +86,7 @@
         common (find-common rds)
         tm (apply merge
                   (map (fn [[a b]]
-                         (let [sv (subs-vec common (if (= common a) b a))]
+                         (let [sv (op/- common (if (= common a) b a))]
                            {(matrix/emap #(Math/abs %) sv) sv}
                            )) rds))]
     (merge tm {:common common})))
@@ -100,7 +94,7 @@
 (defn- rebase-point
   "Map points to new base."
   [relv directionv p]
-  (sum-vec relv (op/* p directionv)))
+  (op/+ relv (op/* p directionv)))
 
 (defn- find-consecutive-distances
   "Make sure to have distances that share a common point. targetd is a seq [dist point]"
@@ -127,16 +121,6 @@
 (defn drop-nth [n coll]
   (keep-indexed #(if (not= %1 n) %2) coll))
 
-(def perm-compensation {[0 1 2] [0 1 2]
-                        [0 2 1] [0 2 1]
-                        [1 0 2] [1 0 2]
-                        [1 2 0] [2 0 1]
-                        [2 0 1] [1 2 0]
-                        [2 1 0] [2 1 0]})
-
-(defn un-perm [compmap perm v]
-  (shuffle-vec (compmap perm) v))
-
 (defn- process
   [acc readings perms]
   (if (empty? perms)
@@ -153,7 +137,7 @@
               sx                                 (find-points (map #(shuffle-vec permutation %) rx) examples)
               fv                                 (first examples)
               dirvec                             (directions (get s0 fv) (get sx fv))
-              v                                  (subs-vec (:common s0) (op/* (:common sx) dirvec))
+              v                                  (op/- (:common s0) (op/* (:common sx) dirvec))
               rebased                            (map (fn [x] (rebase-point v dirvec (shuffle-vec permutation x))) rx)
               ]
           {:acc (into #{} (concat acc rebased))
