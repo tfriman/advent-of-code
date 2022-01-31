@@ -1,5 +1,6 @@
 (ns aoc2021.day18
-  (:require [clojure.zip :as z]))
+  (:require [clojure.zip :as z]
+            [clojure.data :as data]))
 
 (def example "resources/day18-example.txt")
 (def example-pt2 "resources/day18-example-pt2.txt")
@@ -68,7 +69,7 @@
 
 (defn split
   "Gets loc pointing to a reg number needing to be split. Returns root loc.
-   To split a regular number, replace it with a pair; the left element of the
+  To split a regular number, replace it with a pair; the left element of the
    pair should be the regular number divided by two and rounded down, while
    the right element of the pair should be the regular number divided by two
    and rounded up.
