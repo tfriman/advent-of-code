@@ -21,43 +21,77 @@
   {3 1, 4 3, 5 6, 6 7, 7 6, 8 3, 9 1}
   )
 
-(defn- next-pos [startpos diceval]
-  (let [x (mod (+ startpos diceval) 10)]
+(defn deep-merge-with
+  "Like merge-with, but merges maps recursively, applying the given fn
+  only when there's a non-map at a particular level.
+  (deep-merge-with + {:a {:b {:c 1 :d {:x 1 :y 2}} :e 3} :f 4}
+                     {:a {:b {:c 2 :d {:z 9} :z 3} :e 100}})
+  -> {:a {:b {:z 3, :c 3, :d {:z 9, :x 1, :y 2}}, :e 103}, :f 4}"
+  [f & maps]
+  (apply
+   (fn m [& maps]
+     (if (every? map? maps)
+       (apply merge-with m maps)
+       (apply f maps)))
+   maps))
+
+(defn- next-pos
+  "Loop positions based on dice value."
+  [startpos dicevalue]
+  (let [x (mod (+ startpos dicevalue) 10)]
     (if (= 0 x) 10 x)))
 
-(def dirac-dist (frequencies (map #(apply + %) (for [x (range 1 4) y (range 1 4) z (range 1 4)] [x y z]))))
+(def dirac-dist
+  (frequencies (map #(apply + %) (for [x (range 1 4) y (range 1 4) z (range 1 4)] [x y z])))
+  #_(->> (frequencies (map #(apply + %) (for [x (range 1 4) y (range 1 4) z (range 1 4)] [x y z])))
+      (map (fn [[k v]] [k (* 3 v)]))
+      (into {}))
+  )
 
-;; miten erotetaan ne jotka ovat häviäviä? onko väliä, aina tulee se uusi?
+;; miten erotetaan ne jotka ovat häviäviä? onko väliä, aina tulee se uusi? todo
 
 (def basemap (into {} (map (fn [x] [x 0]) (range 1 30))))
 
 (defn- gen-next
-  "Calc new distribution map based on the pos and accumulated count using dirac-dist map"
+  "Calc new distribution map based on the pos and accumulated count using dirac-dist map.
+  Returns map {4 16 5 22} where key/value pairs contain position and count."
   [pos acc]
-  (into {} (map (fn [[k v]] [(+ pos (next-pos pos k)) (* v acc)]) dirac-dist)))
+  (into {} (map (fn [[k v]] (let [posnew (next-pos pos k)] [posnew (* v acc)])) dirac-dist)))
 
 (defn- split-results [m]
   {:next (select-keys m (range 21))
-   :wincount (apply + (vals (select-keys m (range 21 30))))})
-
-;; is this the format
-{16 {:positions [[3 245] [4 1255]]}}
+   :wincount (apply + (flatten (map vals (vals (select-keys m (range 21 30))))))})
 
 (defn- loop-map
-  "Loop all the keys and create new distribution about those."
+  "Loop all the keys and create new distribution about those.
+  {16 {1 13
+       2 142
+       3 234}}"
   [initm]
-  (reduce (partial merge-with +) (map (fn mfx [[k v]] (gen-next k v)) initm)))
+  (reduce (partial deep-merge-with +) (map (fn mfx [[points pospairs]]
+                                             (println "p" points " pp " pospairs)
+                                             (let [nexts (reduce (partial merge-with +) (map (fn [[pos cnt]] (gen-next pos cnt)) pospairs))
+                                                   _ (def nexts nexts)
+                                                   resu (into {} (map (fn [[k v]] [(+ k points) {k v}]) nexts))]
+                                               (def resu resu)
+                                               (println "resu" resu)
+
+                                               resu))
+                                           initm)))
 
 (defn- do-dirac-dicing [p]
   (loop [result 0
-         m (gen-next p 1)
+         m {0 {p 1}}
          i 0]
-    (println "dicing round" i)
-    (if (empty? m)
-      result
-      (let [lm (loop-map m)
-            {:keys [next wincount]} (split-results lm)]
-        (recur (+ result wincount) next (inc i))))))
+    (println "dicing round" i m)
+    (if (= i 30)
+      m
+      (if (empty? m)
+        result
+        (let [lm (loop-map m)
+              _ (def lm lm)
+              {:keys [next wincount]} (split-results lm)]
+          (recur (+ result wincount) next (inc i)))))))
 
 (defn- dirac-round [p1 p2]
   (let [dice (cycle (range 1 101))
