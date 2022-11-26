@@ -21,8 +21,9 @@
    [aoc2021.day18 :as day18]
    [aoc2021.day19 :as day19]
    [aoc2021.day20 :as day20]
+   [aoc2021.day23 :as day23]
    [aoc2021.day25 :as day25]
    ))
 
 (defn -main [& args]
-  (time (println (day19/p12))))
+  (time (println (day23/p1))))
