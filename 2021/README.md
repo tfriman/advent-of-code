@@ -15,3 +15,7 @@ Each dayN.clj has p1 and p2 functions for part1 and part2.
 Edit src/aoc2021/aoccore.clj to the wanted task and part and then run:
 
 ```lein run```
+
+## Things to fix
+### Day23
+Merge two solutions to one.

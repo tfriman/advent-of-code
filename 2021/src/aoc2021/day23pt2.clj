@@ -1,5 +1,5 @@
-(ns aoc2021.day23
-    (:require [clojure.data.priority-map :refer [priority-map]]))
+(ns aoc2021.day23pt2
+  (:require [clojure.data.priority-map :refer [priority-map]]))
 
 (def amphicost {\A 1 \B 10 \C 100 \D 1000})
 
@@ -10,38 +10,33 @@
 
 (def amphi-homes
   "Map containing tuples of coords, first up."
-  {\A [4 0]
-   \B [5 1]
-   \C [6 2]
-   \D [7 3]})
+  {\A [4 0 -4 -8]
+   \B [5 1 -3 -7]
+   \C [6 2 -2 -6]
+   \D [7 3 -1 -5]})
 
-(def an-example {0 \A
-                 1 \D
-                 2 \C
-                 3 \A
-                 4 \B
-                 5 \C
-                 6 \B
-                 7 \D
-                 })
+(def goal-orig {-8 \A
+                -4 \A
+                0  \A
+                4  \A
+                -7 \B
+                -3 \B
+                1  \B
+                5  \B
+                -6 \C
+                -2 \C
+                2  \C
+                6  \C
+                -5 \D
+                -1 \D
+                3  \D
+                7  \D})
 
-(def goal-orig {0 \A
-                4 \A
-                1 \B
-                5 \B
-                2 \C
-                6 \C
-                3 \D
-                7 \D})
-(def goal-40 {4 \B, 5 \C, 7 \D, 0 \A, 1 \D, 2 \C, 3 \A, 10 \B})
-(def goal-240 {4 \B, 7 \D, 0 \A, 1 \D, 2 \C, 3 \A, 10 \B, 6 \C})
-;;(def goal goal-240)
 (def goal goal-orig)
-(def example "resources/day23-example.txt") ;; 12521 is the answer
-(def example-pt2 "resources/day23-example-p2-44169.txt")
-(def path "resources/day23.txt")
-(def input example)
-(def input path)
+(def example-pt2 "resources/day23-example-pt2-44169.txt")
+(def path-pt2 "resources/day23-pt2.txt")
+(def input example-pt2)
+(def input path-pt2)
 
 (defn- positions
   "Parse #F#O# -> F: 0 O:1"
@@ -50,27 +45,47 @@
        (map-indexed (fn [idx itm] [(+ idx offset) itm]))))
 
 (defn- ->positions
-  "Parses start positions to map"
+  "Parses start positions to map. Could be done better."
   [rows]
-  (let [l1 (first (drop 2 rows))
-        l2 (first (drop 3 rows))
-        p1 (positions l1 4)
-        p2 (positions l2 0)]
-    (merge (into {} p1) (into {} p2))))
+  (let [l4 (first (drop 2 rows))
+        l3 (first (drop 3 rows))
+        l2 (first (drop 4 rows))
+        l1 (first (drop 5 rows))
+        p1 (positions l1 -8)
+        p2 (positions l2 -4)
+        p3 (positions l3 0)
+        p4 (positions l4 4)]
+    (merge (into {} p1) (into {} p2) (into {} p3) (into {} p4))))
 
 (def graph
   "Contains tuples containing index and distance to each reachable position.
    Always home -> hallway and hallway -> home, no other movements are possible.
    Each entry has :left and :right trees which are always in 'natural' order ie counted from the centre.
   "
-  {0  {:left  (reverse [[8 4] [9 3]])
-       :right [[10 3] [11 5] [12 7] [13 9] [14 10]]}
-   1  {:left  (reverse [[8 6] [9 5] [10 3]])
-       :right [[11 3] [12 5] [13 7] [14 8]]}
-   2  {:left  (reverse [[8 8] [9 7] [10 5] [11 3]])
-       :right [[12 3] [13 5] [14 6]]}
-   3  {:left  (reverse [[8 10] [9 9] [10 7] [11 5] [12 3]])
-       :right [[13 3] [14 4]]}
+  {-8 {:left  (reverse [[8 6] [9 5]])
+       :right [[10 5] [11 7] [12 9] [13 11] [14 12]]}
+   -7 {:left  (reverse [[8 8] [9 7] [10 5]])
+       :right [[11 5] [12 7] [13 9] [14 10]]}
+   -6 {:left  (reverse [[8 10] [9 9] [10 7] [11 5]])
+       :right [[12 5] [13 7] [14 8]]}
+   -5 {:left  (reverse [[8 12] [9 11] [10 9] [11 7] [12 5]])
+       :right [[13 5] [14 6]]}
+   -4 {:left  (reverse [[8 5] [9 4]])
+       :right [[10 4] [11 6] [12 8] [13 10] [14 11]]}
+   -3 {:left  (reverse [[8 7] [9 6] [10 4]])
+       :right [[11 4] [12 6] [13 8] [14 9]]}
+   -2 {:left  (reverse [[8 9] [9 8] [10 6] [11 4]])
+       :right [[12 4] [13 6] [14 7]]}
+   -1 {:left  (reverse [[8 11] [9 10] [10 8] [11 6] [12 4]])
+       :right [[13 4] [14 5]]}
+   0 {:left  (reverse [[8 4] [9 3]])
+      :right [[10 3] [11 5] [12 7] [13 9] [14 10]]}
+   1 {:left  (reverse [[8 6] [9 5] [10 3]])
+      :right [[11 3] [12 5] [13 7] [14 8]]}
+   2 {:left  (reverse [[8 8] [9 7] [10 5] [11 3]])
+      :right [[12 3] [13 5] [14 6]]}
+   3 {:left  (reverse [[8 10] [9 9] [10 7] [11 5] [12 3]])
+      :right [[13 3] [14 4]]}
    4  {:left  (reverse [[8 3] [9 2]])
        :right [[10 2] [11 4] [12 6] [13 8] [14 9]]}
    5  {:left  (reverse [[8 5] [9 4] [10 2]])
@@ -81,6 +96,17 @@
        :right [[13 2] [14 3]]}
    })
 
+(comment
+  ;; sanity check for graph
+  (defn- check-distancesums
+    [elem]
+    (->> elem
+         vals
+         (apply concat)
+         (reduce (fn [a [i d]] (+ a d)) 0)))
+  (map (fn [r] (map #(check-distancesums (get graph %)) r))
+       (map (fn [x] (range (* 4 x) (* 4 (inc x)))) (range -2 2))))
+
 (defn- hallways
   "Return set of reserved hallway indices"
   [current] (set (keys (select-keys current (range 8 15)))))
@@ -90,8 +116,12 @@
   [current upidx]
   (if (get current upidx)
     upidx
-    (when (get current (- upidx 4))
-      (- upidx 4))))
+    (if (get current (- upidx 4))
+      (- upidx 4)
+      (if (get current (- upidx 8))
+        (- upidx 8)
+        (when (get current (- upidx 12))
+          (- upidx 12))))))
 
 (defn- find-hallway
   "Return those [idx dist] tuples until blocked.
@@ -126,13 +156,17 @@
   "Check possible hallway move. Return tuple [new state, cost-to-home] or nil
    Move is possible when home is empty or occupied by a fellow amphi and there is a clear path to home."
   [current idx]
-  (let [amphi        (get current idx)
-        [up bottom]  (get amphi-homes amphi)
-        up-amphi     (get current up)
-        bottom-amphi (get current bottom)
-        target-home  (if (nil? bottom-amphi)
-                       bottom
-                       (when (and (= bottom-amphi amphi) (nil? up-amphi)) up))]
+  (let [amphi           (get current idx)
+        [l4 l0 l-4 l-8] (get amphi-homes amphi)
+        l4-amphi        (get current l4)
+        l0-amphi        (get current l0)
+        l-4-amphi       (get current l-4)
+        l-8-amphi       (get current l-8)
+        target-home     (if (nil? l-8-amphi)
+                          l-8
+                          (if (and (= l-8-amphi amphi) (nil? l-4-amphi) (nil? l0-amphi) (nil? l4-amphi)) l-4
+                              (if (and (= l-4-amphi amphi) (= l-8-amphi amphi) (nil? l0-amphi) (nil? l4-amphi)) l0
+                                  (when (and (= l0-amphi amphi) (= l-8-amphi amphi) (= l-4-amphi amphi) (nil? l4-amphi)) l4))))]
     (when target-home
       (let [blocked  (hallways (dissoc current idx))
             moves    (get graph target-home)
@@ -161,16 +195,19 @@
          cost-so-far {start-pos 0}
          idx         0]
     (when (= 0 (mod idx 10000))
-      #_(println "round " idx "open" (count open) (count cost-so-far)))
+      (println "round " idx "open" (count open) (count cost-so-far)))
     (if (empty? open)
       (do
-        (println "failure, should not end up here ever")
+        (println "failure, should not end up here ever. " idx)
         (def xxx-cost cost-so-far)
+
         nil)
       (let [current (first (peek open))]
         (if (= current goal)
           (-> open peek second)
           (let [newpaths (new-paths current)
+                _        (def xxx-current current)
+                _        (def xxx-newpaths newpaths)
                 {:keys [acc-open acc-cost]}
                 (reduce (fn [{:keys [acc-open acc-cost]} [newpos cost]]
                           (let [new-cost     (+ (acc-cost current) cost)
@@ -187,18 +224,11 @@
                         {:acc-open (pop open) :acc-cost cost-so-far}
                         newpaths)]
             (recur acc-open acc-cost (inc idx))))))))
+(comment
+  (def inputs (clojure.string/split-lines (slurp example-pt2)))
+  )
 
-(defn p1 []
+(defn p2 []
   (let [inputs (clojure.string/split-lines (slurp input))
         start-pos (->positions inputs)]
     (solve start-pos)))
-
-(comment
-  (def start-pos {4 \B, 5 \C, 6 \B, 7 \D, 0 \A, 1 \D, 2 \C, 3 \A})
-  (def pos1 (-> (dissoc start-pos 6) (assoc 10 \B)))
-  (def pos2-1 (-> (dissoc pos1 5) (assoc 11 \C)))
-  (def pos2-2 (-> (dissoc pos2-1 11) (assoc 6 \C)))
-  (assert (= 7008 (solve {5 \B, 6 \C, 0 \A, 1 \B, 2 \C, 13 \A 12 \D 11 \D})))
-  (assert (= 9011 (solve {5 \B, 6 \C, 0 \A, 1 \B, 2 \C, 3 \A 7 \D 11 \D})))
-
-  )
