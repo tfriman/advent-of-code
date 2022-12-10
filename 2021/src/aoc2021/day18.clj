@@ -99,8 +99,8 @@
     (if (not (z/branch? loc))
       (z/node loc)
       (let [purenode (first (drop-while notpure? (lazy-seq [loc] (iterate z/next loc))))
-            [l r] (z/node purenode)
-            resu (z/replace purenode (+ (* 3 l) (* 2 r)))]
+            [l r]    (z/node purenode)
+            resu     (z/replace purenode (+ (* 3 l) (* 2 r)))]
         (recur (z/vector-zip (z/root resu)))))))
 
 (defn process-loc
@@ -119,7 +119,7 @@
 (defn- process-pair [a b] (process-loc (add a b)))
 
 (defn do-it [inp]
-  (let [ins (map read-string (clojure.string/split-lines (slurp inp)))
+  (let [ins    (map read-string (clojure.string/split-lines (slurp inp)))
         result (reduce process-pair ins)]
     (doto result (#(println "result" %)))))
 
@@ -128,19 +128,18 @@
 (defn- find-max-mag
   "Loop each pair and find the max"
   [s]
-  (loop [f (first s)
-         r (rest s)
-         res 0]
+  (loop [[f & r] s
+         res     0]
     (if (empty? r)
       res
       (let [newres (reduce (fn redufn [acc x]
                              (let [fx (magnitude (process-pair f x))
                                    xf (magnitude (process-pair x f))
-                                   m (max acc fx xf)]
+                                   m  (max acc fx xf)]
                                m)) res r)]
-        (recur (first r) (rest r) newres)))))
+        (recur r newres)))))
 
 (defn p2 []
-  (let [ins (map read-string (clojure.string/split-lines (slurp input)))
+  (let [ins    (map read-string (clojure.string/split-lines (slurp input)))
         maxmag (find-max-mag ins)]
     (doto maxmag (#(println "p2:" %)))))

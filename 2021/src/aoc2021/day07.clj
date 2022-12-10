@@ -17,12 +17,11 @@
         xmax (apply max in)
         xran (range xl (inc xmax))
         f-l (partial find-lowest c-f in)]
-    (loop [x (first xran)
-           re (rest xran)
+    (loop [[x & re] xran
            result Integer/MAX_VALUE]
       (if (empty? re)
         result
-        (recur (first re) (rest re) (f-l x result))))))
+        (recur re (f-l x result))))))
 
 (defn p1 []
   (let [in (slurp input)
@@ -34,7 +33,7 @@
 (defn cost-f-sum [y]
   (/ (* y (inc y)) 2))
 
-(defn p1 []
+(defn p2 []
   (let [in (slurp input)
         x (clojure.string/split in  #",")
         ints (map #(Integer/parseInt %) x)

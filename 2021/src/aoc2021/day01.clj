@@ -5,9 +5,9 @@
 (def input path)
 
 (defn diffs [in]
-  (loop [fi (first in)
+  (loop [fi  (first in)
          sec (second in)
-         re (rest in)
+         re  (rest in)
          res []]
     (if (not sec)
       res
@@ -24,14 +24,13 @@
     (println "result:" lc)))
 
 (defn diffs3 [in]
-  (loop [fi (first in)
+  (loop [fi     (first in)
          fourth (first (next (next (next in))))
-         re (rest in)
-         res []]
+         re     (rest in)
+         res    []]
     (if (not fourth)
       res
-      (recur (first re) (first (next (next (next re)))) (rest re) (conj res (- (Integer/parseInt fourth) (Integer/parseInt fi))))
-      )))
+      (recur (first re) (first (next (next (next re)))) (rest re) (conj res (- (Integer/parseInt fourth) (Integer/parseInt fi)))))))
 
 (defn p2 []
   (let [in (clojure.string/split-lines (slurp input))

@@ -219,24 +219,23 @@
           (recur (:payload nxt) nxtparsers (conj elements nxt) (conj versions (:version nxt))))))))
 
 (defn loop-parse [s]
-  (loop [e (first s)
-         r (rest s)
+  (loop [[e & r] s
          idstack '()
          accu '()]
     (if (nil? e)
       accu
       (if-let [oid (:origin-id e)]
-        (recur (first r) (rest r) (conj idstack oid) accu)
-        (if-let [id (:id e)]
+        (recur r (conj idstack oid) accu) ;; does this happen ever?
+        (if-let [id (:id e)] ;; or this?
           (let [new-idstack (rest idstack)
                 operation (second (get opers (:type e)))
                 params (map second (take-while (fn [[x _]] (x id)) accu))
                 newval (operation params)
                 new-accu (conj (drop (count params) accu) [(set idstack)newval])]
-            (recur (first r) (rest r) new-idstack new-accu))
+            (recur r new-idstack new-accu))
           (let [val (:value e)
                 new-accu (conj accu [(set idstack) val])]
-            (recur (first r) (rest r) idstack new-accu)))))))
+            (recur r idstack new-accu)))))))
 
 (defn solve [hexstr]
   (->> hexstr

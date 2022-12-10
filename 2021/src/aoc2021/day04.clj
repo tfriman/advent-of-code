@@ -48,14 +48,14 @@
      :hits #{}}))
 
 (defn check [boards-in draws-in]
-  (loop [draw (first draws-in)
+  (loop [[draw & draws] draws-in
          boards boards-in
-         draws (rest draws-in)]
+         ]
     (let [updated-boards (map #(update-board draw %) boards)
           win (some #(win? %) updated-boards)]
       (if (or win (empty? draws))
         [win draw]
-        (recur (first draws) updated-boards (rest draws))))))
+        (recur draws updated-boards)))))
 
 (defn ->boards [rows]
   (let [parts (partition 6 rows)]
@@ -71,14 +71,13 @@
     (println "result:" result)))
 
 (defn check-last [boards-in draws-in]
-  (loop [draw (first draws-in)
-         boards boards-in
-         draws (rest draws-in)]
+  (loop [[draw & draws] draws-in
+         boards boards-in]
     (let [updated-boards (map #(update-board draw %) boards)
-          no-wins (filter #((complement win?) %) updated-boards)]
+          no-wins        (filter #((complement win?) %) updated-boards)]
       (if (empty? no-wins)
         [(first updated-boards) draw]
-        (recur (first draws) no-wins (rest draws))))))
+        (recur draws no-wins)))))
 
 (defn p2 []
   (let [raw (clojure.string/split-lines (slurp input))

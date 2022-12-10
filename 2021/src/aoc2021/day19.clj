@@ -35,8 +35,7 @@
 (defn- rel-distances
   "Does too many things..."
   [diff-fn filter-fn transform-fn s]
-  (loop [f    (first s)
-         r    (rest s)
+  (loop [[f & r] s
          vecs []]
     (if (empty? r)
       vecs
@@ -46,7 +45,7 @@
                                   (cons (transform-fn x f diff) acc)
                                   acc))
                               ) vecs r)]
-        (recur (first r) (rest r) newvecs)))))
+        (recur r newvecs)))))
 
 (defn- ->vec
   "'727,592,562' string to [int int int]"
@@ -158,13 +157,12 @@
   (apply + (vec-diff v1 v2)))
 
 (defn- find-max-manhattan [vs]
-  (loop [f (first vs)
-         r (rest vs)
+  (loop [[f & r] vs
          mv 0]
     (if (empty? r)
       mv
       (let [ mv (max mv (apply max (map (partial manhattan f) r)))]
-        (recur (first r) (rest r) mv)))))
+        (recur r mv)))))
 
 (defn p12 []
   (let [ins       (clojure.string/split-lines (slurp input))

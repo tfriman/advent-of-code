@@ -34,8 +34,7 @@
   (set (filter some? (map-indexed (fn [idx itm] (when (= itm c) idx)) carr))))
 
 (defn loop-east [columns carr east]
-  (loop [e       (first east)
-         r       (rest east)
+  (loop [[e & r] east
          changed [] ;; triplets fromidx toidx ch
          ]
     (if (nil? e)
@@ -47,12 +46,11 @@
             newchanged (if avail?
                          (conj changed [e ne \>])
                          changed)]
-        (recur (first r) (rest r) newchanged)))))
+        (recur r newchanged)))))
 
 (defn loop-south [rows columns carr south]
   #_(println "loop-south" rows columns south carr)
-  (loop [e       (first south)
-         r       (rest south)
+  (loop [[e & r] south
          changed []]
     (if (nil? e)
       (do
@@ -63,7 +61,7 @@
             newchanged (if avail?
                          (conj changed [e ne \v])
                          changed)]
-        (recur (first r) (rest r) newchanged)))))
+        (recur r newchanged)))))
 
 (defn do-it [rows columns in-carr in-east in-south]
   (loop [carr    in-carr
