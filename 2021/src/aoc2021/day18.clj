@@ -95,7 +95,6 @@
   "pt2 calculation"
   [loc]
   (loop [loc (z/vector-zip loc)]
-    (def ll loc)
     (if (not (z/branch? loc))
       (z/node loc)
       (let [purenode (first (drop-while notpure? (lazy-seq [loc] (iterate z/next loc))))
