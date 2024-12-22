@@ -2,10 +2,14 @@
 
 (def example "resources/day22-example-2.txt")
 (def short-example "resources/day22-example-1.txt")
+(def example-pt2 "resources/day22-pt2-example.txt")
 (def path "resources/day22.txt")
 (def input short-example)
 (def input example)
 (def input path)
+(def input example-pt2)
+(def input example)
+
 
 (defn- ->num [s] (Long/parseLong s))
 
@@ -48,5 +52,9 @@
                  (filter filter-area))
         result (reduce (fn [a x] (new-on a x)) #{} ins)
         ]
-    result)
+    (doto (count result) ((fn [x] (println "result:" x))) ))
+  )
+
+(comment
+  (p1)
   )
