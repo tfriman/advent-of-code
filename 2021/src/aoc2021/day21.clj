@@ -41,7 +41,7 @@
   (let [x (mod (+ startpos dicevalue) 10)]
     (if (= 0 x) 10 x)))
 
-(def dirac-dist
+(def dirac-distribution
   (frequencies (map #(apply + %) (for [x (range 1 4) y (range 1 4) z (range 1 4)] [x y z])))
   #_(->> (frequencies (map #(apply + %) (for [x (range 1 4) y (range 1 4) z (range 1 4)] [x y z])))
       (map (fn [[k v]] [k (* 3 v)]))
@@ -56,7 +56,7 @@
   "Calc new distribution map based on the pos and accumulated count using dirac-dist map.
   Returns map {4 16 5 22} where key/value pairs contain position and count."
   [pos acc]
-  (into {} (map (fn [[k v]] (let [posnew (next-pos pos k)] [posnew (* v acc)])) dirac-dist)))
+  (into {} (map (fn [[k v]] (let [posnew (next-pos pos k)] [posnew (* v acc)])) dirac-distribution)))
 
 (defn- split-results [m]
   {:next (select-keys m (range 21))
