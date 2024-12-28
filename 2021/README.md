@@ -16,6 +16,8 @@ Edit src/aoc2021/aoccore.clj to the wanted task and part and then run:
 
 ```lein run```
 
+Or start REPL in given namespace and eval accordingly.
+
 ## Things to fix
 ### Day23
 Merge two solutions to one.
