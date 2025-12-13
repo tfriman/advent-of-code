@@ -25,28 +25,8 @@
     (as-> x (map ->range x)
           (apply concat x))))
 
-(comment
-  (parse-to-numbers input-example)
-
-  (-> (filter check-dup (parse-to-numbers input))
-      (as-> x (apply + x))
-      )
-
-  (do
-    (assert (= nil (check-dup 1)))
-    (assert (= 11 (check-dup 11)))
-    (assert (= nil (check-dup 121)))
-    (assert (= 1212 (check-dup 1212)))
-    )
-  )
-
-
-(defn part1 [inputs]
-  )
-
-(defn p1 [i]
-  (let [lines (clojure.string/split-lines (slurp i))]
-    (part1 lines)))
-
+(defn p1 [inputs]
+  (-> (filter check-dup (parse-to-numbers inputs))
+      (as-> x (apply + x))))
 
 (p1 input-example)
