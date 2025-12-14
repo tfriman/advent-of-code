@@ -30,3 +30,27 @@
       (as-> x (apply + x))))
 
 (p1 input-example)
+
+(defn check-some-dup
+  "If some of the sublists matches, return value"
+  [s]
+  )
+
+(defn check-all-repetitions [s]
+  (some check-some-dup (gen-all-partitions s))
+  )
+(comment
+  (do
+    (assert (= true (check-all-repetitions "99")))
+    (assert (= true (check-all-repetitions "999")))
+    (assert (= true (check-all-repetitions "2121212121")))
+    (assert (= true (check-all-repetitions "565656")))
+    )
+  )
+(defn p2 [inputs]
+  (parse-to-numbers inputs)
+  )
+
+(comment
+  (assert (= 4174379265 (p2 input-example)))
+  )
