@@ -10,21 +10,6 @@
 
 (def in (get-input input-example))
 
-(defn- update-freqs
-  "Decreases freqs, if 0, removes key too."
-  [f k]
-  {:pre [(clojure.test/is (char? k))]}
-  (println "got k" k)
-  (if (= 1 (get f k))
-    (dissoc f k)
-    (update-in f [k] dec)))
-
-(comment
-  (do
-    (assert (= {\8 3, \1 10, \2 1} (update-freqs (frequencies "818181911112111") \9)))
-    (assert (= {\8 2, \1 10, \9 1, \2 1}) (update-freqs (frequencies "818181911112111") \8)))
-  )
-
 (defn- ->int [s]
   (if (char? s)
     (Integer/parseInt (str s))
@@ -36,50 +21,43 @@
   "Calc joltage for a row"
   [s]
   {:pre [(string? s)]}
-  ;; freqs, find largest, then 2nd largest behind that?
-  (let [freqs-init (frequencies s)]
-    ;; (get (frequencies "818181911112111") \8)
-    (reduce (fn [{:keys [freqs a b maxseen] :or {a :notseen b :notseen}} v]
-              (let [new-freqs (update-freqs freqs v)]
-                (if (= :notseen a)
-                  {
-                   :freq new-freqs
-                   :a (->int v)
-                   :b :notseen
-                   :maxseen (->int v)
-                   }
-                  (if (= :notseen b)
-                    {
-                     :freq new-freqs
-                     :a a
-                     :b (->int v)
-                     :maxseen (->int (str a v))
-                     }
-                    (let [maxv (max a b)
-                          newmax (->int (str maxv v))]
-                      (if (> newmax maxseen)
-                        {:freqs new-freqs
-                         :a maxv
-                         :b (->int v)
-                         :maxseen newmax
-                         }
-                        {
-                         :freqs new-freqs
-                         :a a
-                         :b b
-                         :maxseen maxseen
-                         }
-                        )
-                      )
-                    )
-                  ))
-              )
-            {
-             :freqs freqs-init
-             :maxseen 0
-             }
-            s
-            )))
+  (:maxseen
+   (reduce (fn [{:keys [freqs a b maxseen] :or {a :notseen b :notseen}} v]
+             (if (= :notseen a)
+               {
+                :a (->int v)
+                :b :notseen
+                :maxseen (->int v)
+                }
+               (if (= :notseen b)
+                 {
+                  :a a
+                  :b (->int v)
+                  :maxseen (->int (str a v))
+                  }
+                 (let [maxv (max a b)
+                       newmax (->int (str maxv v))]
+                   (if (> newmax maxseen)
+                     {
+                      :a maxv
+                      :b (->int v)
+                      :maxseen newmax
+                      }
+                     {
+                      :a a
+                      :b b
+                      :maxseen maxseen
+                      }
+                     )
+                   )
+                 )
+               )
+             )
+           {
+            :maxseen 0
+            }
+           s
+           )))
 
 (comment
   (do
@@ -90,5 +68,12 @@
     )
   )
 
-(defn p1 []
-  )
+(defn p1 [in]
+  (let [input (get-input in)]
+    (->> (map calc-joltage input)
+         (apply +)
+         )
+    ))
+
+(p1 input-example)
+(p1 input-real)
