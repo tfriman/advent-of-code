@@ -47,7 +47,7 @@
   [s x y]
   (when (= \@ (nth (nth s x) y))
     (let [res (filterv true? (keep (fn [[a b]] (= \@ (nth (nth s a) b))) (->coords x y)))
-          ;;_ (println "res" res)
+          ;;_ (println "res foo" res)
           cres (count res)
           result (> 4 cres)
           ]
