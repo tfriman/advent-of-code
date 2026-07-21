@@ -1,6 +1,7 @@
 (ns aoc.day04)
 
 (def input-example "resources/day04-example.txt")
+(def input-example2 "resources/day04-example-2.txt")
 (def input-real "resources/day04-gitignore.txt")
 
 (defn get-input [in]
@@ -54,7 +55,7 @@
         (printf "x %s y %s can be accessed%n" x y)
         )
       result
-)))
+      )))
 
 (defn- solve-p1
   [m]
@@ -67,12 +68,68 @@
   (count
    (filterv true?
             (-> s
-                    get-input
-                    input-to-matrix
-                    solve-p1
-                    )
-)))
+                get-input
+                input-to-matrix
+                solve-p1
+                )
+            )))
 
-(p1 input-example)
+(comment
+  (p1 input-example)
 
-(p1 input-real)
+  (p1 input-example2)
+
+  (p1 input-real))
+
+;; p2 starts
+
+(defn- mark-coords
+  [in-m coords]
+  (reduce (fn [m [x y]]
+            (update-in (vec m) [x] (fn [r]
+                                     (->>
+                                      (assoc-in (vec r) [y] \.)
+                                      (apply str)))))
+          in-m
+          coords
+          )
+  )
+
+(defn- solve-p2-one-round
+  [m]
+  (let [coords (for [x (range 1 (- (count (first m)) 1))
+                     y (range 1 (- (count m) 1))
+                     :when (can-be-accessed? m x y)]
+                 [x y]
+                 )
+        changed-count (count coords)
+        new-m (mark-coords m coords)
+        ]
+
+    {:changed changed-count
+     :new new-m
+     })
+  )
+
+(defn- solve-p2
+  [m]
+  (loop [in m
+         latest 1
+         acc 0
+         ]
+    (if (= 0 latest)
+      acc
+      (let [{:keys [changed new]} (solve-p2-one-round in)]
+        (recur new changed (+ acc changed))
+        ))))
+
+(defn p2 [s]
+  (-> s
+      get-input
+      input-to-matrix
+      solve-p2
+      ))
+
+(p2 input-example)
+
+(p2 input-real)
