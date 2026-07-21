@@ -76,7 +76,6 @@
   (let [{:keys [seqs] :as inputs} (-> in
                                       get-input
                                       parse-input)
-        _ (def seqs seqs)
         all-ranges  (reduce (fn [a [start stop]]
                               (let [[old-start old-end] (first a)]
                                 (if (>= old-end stop)
@@ -88,15 +87,12 @@
                                       (concat [new-range] (rest a)))
                                     ;; no overlap, add new range
                                     (concat [[start stop]] a)
-                                    )
-                                  )
-                                ))
+                                    ))))
                             [(first seqs)]
-                            (rest seqs)
-                            )
-        ]
-    (apply + (map (fn [[a b]] (inc (- b a))) all-ranges))
-    ))
+                            (rest seqs))]
+    (->> all-ranges
+         (map (fn [[start stop]] (inc (- stop start))))
+         (apply +))))
 
 (p2 input-example)
 
