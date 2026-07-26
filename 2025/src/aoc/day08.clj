@@ -1,5 +1,7 @@
 (ns aoc.day08
-  (:require [clojure.math :as math])
+  (:require [clojure.math :as math]
+            [clojure.test]
+            )
   )
 
 (def input-example "resources/day08-example.txt")
@@ -42,8 +44,7 @@
         yy (math/pow (- y1 y2) 2)
         zz (math/pow (- z1 z2) 2)
         ]
-    (+ xx yy zz)
-    ))
+    (+ xx yy zz)))
 
 (comment
   (do
@@ -89,24 +90,19 @@
 (defn- brute-all
   [reference coords-in]
   (-> (map (fn [c] [(calc-distance reference c) (sort coord-compare [c reference])]) coords-in)
-      sort
-      ))
+      sort))
 
-(defn- test-sort-pairs [ps]
-  (map #(sort coord-compare %) (partition 2 ps))
-  )
+(defn- test-sort-pairs [ps] (map #(sort coord-compare %) (partition 2 ps)))
 
 (defn- brute-all-combs
   [coords-in]
   (loop [reference (first coords-in)
          coords (rest coords-in)
-         results []
-         ]
+         results []]
     (if (empty? coords)
       (->> results sort (map second) (map vec))
       (let [res (brute-all reference coords)]
-        (recur (first coords) (rest coords) (concat results res))
-        ))))
+        (recur (first coords) (rest coords) (concat results res))))))
 
 (defn- fix-map-both-exist
   "M contains keys for both c1 and c2. If both point to the same circuit already, noop.
@@ -118,12 +114,10 @@
     (if (= f1 f2)
       m ;; noop
       (let [keys-needing-fixing (->> m
-                                (group-by val)
-                                (#(get % f2))
-                                (map key)
-                                )]
+                                     (group-by val)
+                                     (#(get % f2))
+                                     (map key))]
         (reduce (fn [acc k] (assoc acc k f1)) m keys-needing-fixing)))))
-
 
 (defn- calc-circuits
   "Pairs contain sorted [coord1 coord2] pairs. Find those circuits out of that."
@@ -150,45 +144,8 @@
                         (if (nil? f2)
                           (assoc coll c2 f1) ;; f1 found, update map to have that for f1 as well
                           ;; both exist. Update those with f2 val to be f1.
-                          (fix-map-both-exist coll c1 c2)
-                          )
-                        )
-                      )
-            ]
-        (recur (first r) (rest r) new-map)
-        )
-      )
-    )
-  )
-
-(comment
-  (def input (->> input-example get-input (map parse-coords)))
-  (brute-all (first input) (rest input))
-  (def res (brute-all-combs input))
-
-  (do
-    (test-sort-pairs [
-                      {:x 162, :y 817, :z 812} {:x 425, :y 690, :z 689}
-                      {:x 162, :y 817, :z 812} {:x 431, :y 825, :z 988}
-                      {:x 805, :y 96, :z 715} {:x 906, :y 360, :z 560}
-                      ])
-
-    (assert (= {:x 431, :y 825, :z 988} (:closest (find-closest-to
-                                                   #{
-                                                     (test-sort-pairs [
-                                                                       {:x 162, :y 817, :z 812} {:x 425, :y 690, :z 689}
-                                                                       {:x 162, :y 817, :z 812} {:x 431, :y 825, :z 988}
-                                                                       {:x 906, :y 360, :z 560} {:x 805, :y 96, :z 715}
-                                                                       ])
-                                                     } (first input) (rest input)))))
-    )
-  (do
-    (assert (= {:x 425, :y 690, :z 689} (:closest (find-closest-to #{} (first input) (rest input)))))
-    (assert (= {:x 431, :y 825, :z 988} (:closest (find-closest-to #{(sort coord-compare [(first input) {:x 425,:y 690, :z 689}])} (first input) (rest input)))))
-
-    (assert (= {:x 431, :y 825, :z 988} (:closest (find-closest-to #{(sort coord-compare [(first input) {:x 425,:y 690, :z 689}]) (sort coord-compare [{:x 906, :y 360, :z 560} {:x 805, :y 96, :z 715}])} (first input) (rest input))))))
-
-  )
+                          (fix-map-both-exist coll c1 c2))))]
+        (recur (first r) (rest r) new-map)))))
 
 (defn p1
   [i c]
@@ -196,8 +153,7 @@
         res (brute-all-combs input)
         _ (def res res)
         f (frequencies (vals (calc-circuits (take c res))))
-        _ (def f f)
-        ]
+        _ (def f f)]
     (->> f
          vals
          sort
@@ -208,3 +164,67 @@
 
 (p1 input-example 10)
 ;; (time (p1 input-real 1000)) ;; takes about 33 seconds
+
+
+;; p2 idea; do running counting on circuits seen. no need to count distances at all.
+;; redo calc-circuits to take while single circuit found
+
+
+
+(defn- calc-circuits-until-one
+  "Pairs contain sorted [coord1 coord2] pairs. Find those circuits out of that."
+  [totalcount pairs]
+  (loop [[c1 c2] (first pairs)
+         r (rest pairs)
+         coll {}
+         prev nil
+         c 0
+         ]
+    (do
+      ;;(println "count coll" (count coll) " and rest count "(count r))
+      (if (or (nil? c1) (nil? c2) (and (= totalcount (count (vals coll))) (= 1 (count (into #{} (vals coll))))))
+        (do
+          (def x coll)
+          (def c1 c1)
+          (def c2 c2)
+          (def totalcount totalcount)
+          prev)
+        (let [f1 (get coll c1)
+              f2 (get coll c2)
+              new-map (if (and (nil? f1) (nil? f2)) ;; new circuit
+                        (-> coll
+                            (assoc c1 [c1 c2])
+                            (assoc c2 [c1 c2]))
+                        (if (nil? f1)
+                          (assoc coll c1 f2) ;; f2 found, update map to have that for f1 as well
+                          (if (nil? f2)
+                            (assoc coll c2 f1) ;; f1 found, update map to have that for f2 as well
+                            ;; both exist. Update those with f2 val to be f1.
+                            (fix-map-both-exist coll c1 c2))))]
+          (recur (first r) (rest r) new-map [c1 c2] (inc c)))))))
+
+(defn- p2
+  [in]
+  (let [input (->> in get-input (map parse-coords))
+        totalcount (count input)
+        res (brute-all-combs input)
+        _ (def res res)
+        [c1 c2] (calc-circuits-until-one totalcount res)
+        ]
+    (* (:x c1) (:x c2))
+    )
+  )
+
+(comment
+  (def p2c1 (parse-coords "117,168,530"))
+  (def p2c2 (parse-coords "216,146,977"))
+  (def matching-pair [p2c1 p2c2])
+  )
+
+(defn p2-run []
+  (time (p2 input-real))
+  )
+(comment
+  (p2 input-example)
+    (time (p2 input-real))
+  )
