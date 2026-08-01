@@ -1,7 +1,7 @@
 (ns aoc.aoccore
   (:gen-class)
   (:require
-    [aoc.day08 :as day]
+    [aoc.day09 :as day]
     ))
 
 (defn -main [& args]
